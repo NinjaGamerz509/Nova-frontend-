@@ -43,31 +43,17 @@ class NovaViewModel : ViewModel() {
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
     val expenses: StateFlow<List<Expense>> = _expenses
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
-
     private var token: String? = null
     private var sessionId: String = UUID.randomUUID().toString()
 
     fun checkLogin(context: Context) {
         viewModelScope.launch {
             val saved = PrefsManager.getToken(context)
-            if (saved != null) {
-                try {
-                    val res = api.verify("Bearer $saved")
-                    if (res.isSuccessful && res.body()?.success == true) {
-                        token = saved
-                        _isLoggedIn.value = true
-                        val savedSession = PrefsManager.getSession(context)
-                        if (savedSession != null) sessionId = savedSession
-                    } else {
-                        PrefsManager.clearToken(context)
-                    }
-                } catch (e: Exception) {
-                    // network error - still use saved token
-                    token = saved
-                    _isLoggedIn.value = true
-                }
+            if (!saved.isNullOrBlank()) {
+                token = saved
+                val savedSession = PrefsManager.getSession(context)
+                if (!savedSession.isNullOrBlank()) sessionId = savedSession
+                _isLoggedIn.value = true
             }
         }
     }
@@ -95,7 +81,6 @@ class NovaViewModel : ViewModel() {
 
     fun logout(context: Context) {
         viewModelScope.launch {
-            token?.let { api.logout("Bearer $it") }
             PrefsManager.clearToken(context)
             token = null
             _isLoggedIn.value = false
@@ -114,7 +99,6 @@ class NovaViewModel : ViewModel() {
                 if (res.isSuccessful && res.body()?.success == true) {
                     val body = res.body()!!
                     _messages.value = _messages.value + ChatMessage("nova", body.response, body.sources)
-                    _agentStatus.value = AgentStatus("", false)
                 } else {
                     _messages.value = _messages.value + ChatMessage("nova", "Kuch problem hui, dobara try karo.")
                 }
