@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">nova</string>
+    <string name="wake_word_notification">nova is listening in background</string>
+    <string name="wake_word_channel">nova Wake Word</string>
+</resources>
