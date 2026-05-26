@@ -43,7 +43,7 @@ class NovaViewModel : ViewModel() {
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
     val expenses: StateFlow<List<Expense>> = _expenses
 
-    private var token: String? = null
+    private var token: String? = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5pbmphQG5vdmEuY29tIiwibmFtZSI6Ik5vdmEgVXNlciIsImlhdCI6MTc3OTc5MTY1MSwiZXhwIjoxNzgyMzgzNjUxfQ.2WRm8uA-xhkgTI5lcNXJ3vZk-tL_189XktOQuCuW5_E"
     private var sessionId: String = UUID.randomUUID().toString()
 
     fun checkLogin(context: Context) {
