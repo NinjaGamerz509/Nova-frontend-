@@ -28,11 +28,14 @@ jobs:
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
+      - name: Create keystore
+        run: keytool -genkey -v -keystore nova.keystore -alias nova -keyalg RSA -keysize 2048 -validity 10000 -storepass ninja786 -keypass ninja786 -dname "CN=nova, OU=nova, O=nova, L=IN, S=IN, C=IN"
+
+      - name: Build Release APK
+        run: gradle assembleRelease -Pandroid.injected.signing.store.file=$PWD/nova.keystore -Pandroid.injected.signing.store.password=ninja786 -Pandroid.injected.signing.key.alias=nova -Pandroid.injected.signing.key.password=ninja786
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: nova-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: nova-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
