@@ -133,6 +133,7 @@ fun TasksWindow(
     }
 }
 
+@Composable
 fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = this.then(
     Modifier.clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, onClick = onClick)
 )
