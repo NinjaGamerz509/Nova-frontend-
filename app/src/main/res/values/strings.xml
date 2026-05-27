@@ -3,4 +3,5 @@
     <string name="app_name">nova</string>
     <string name="wake_word_notification">nova is listening in background</string>
     <string name="wake_word_channel">nova Wake Word</string>
+    <string name="accessibility_description">nova AI Assistant needs accessibility access to browse the web and perform actions on your behalf</string>
 </resources>
