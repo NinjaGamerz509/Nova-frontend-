@@ -53,4 +53,7 @@ interface ApiService {
 
     @POST("api/finance/expenses")
     suspend fun addExpense(@Header("Authorization") token: String, @Body request: ExpenseRequest): Response<GenericResponse>
+
+    @DELETE("api/finance/expenses/{id}")
+    suspend fun deleteExpense(@Header("Authorization") token: String, @Path("id") id: String): Response<GenericResponse>
 }

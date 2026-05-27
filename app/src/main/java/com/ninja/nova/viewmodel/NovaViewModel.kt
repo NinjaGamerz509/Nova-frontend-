@@ -15,78 +15,26 @@ data class AgentStatus(val message: String = "", val isActive: Boolean = false)
 
 class NovaViewModel : ViewModel() {
     private val api = RetrofitClient.api
-
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
-
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
-
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening
-
     private val _isSpeaking = MutableStateFlow(false)
     val isSpeaking: StateFlow<Boolean> = _isSpeaking
-
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
-
     private val _agentStatus = MutableStateFlow(AgentStatus())
     val agentStatus: StateFlow<AgentStatus> = _agentStatus
-
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks
-
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes
-
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
     val expenses: StateFlow<List<Expense>> = _expenses
-
     private var token: String? = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5pbmphQG5vdmEuY29tIiwibmFtZSI6Ik5vdmEgVXNlciIsImlhdCI6MTc3OTc5MTY1MSwiZXhwIjoxNzgyMzgzNjUxfQ.2WRm8uA-xhkgTI5lcNXJ3vZk-tL_189XktOQuCuW5_E"
     private var sessionId: String = UUID.randomUUID().toString()
-
-    fun checkLogin(context: Context) {
-        viewModelScope.launch {
-            val saved = PrefsManager.getToken(context)
-            if (!saved.isNullOrBlank()) {
-                token = saved
-                val savedSession = PrefsManager.getSession(context)
-                if (!savedSession.isNullOrBlank()) sessionId = savedSession
-                _isLoggedIn.value = true
-            }
-        }
-    }
-
-    fun login(context: Context, email: String, password: String, onError: (String) -> Unit) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val res = api.login(LoginRequest(email, password))
-                if (res.isSuccessful && res.body()?.success == true) {
-                    val t = res.body()!!.token!!
-                    token = t
-                    PrefsManager.saveToken(context, t)
-                    PrefsManager.saveSession(context, sessionId)
-                    _isLoggedIn.value = true
-                } else {
-                    onError(res.body()?.message ?: "Login failed")
-                }
-            } catch (e: Exception) {
-                onError("Cannot connect to nova server")
-            }
-            _isLoading.value = false
-        }
-    }
-
-    fun logout(context: Context) {
-        viewModelScope.launch {
-            PrefsManager.clearToken(context)
-            token = null
-            _isLoggedIn.value = false
-            _messages.value = emptyList()
-        }
-    }
 
     fun sendMessage(text: String) {
         if (text.isBlank()) return
@@ -103,7 +51,7 @@ class NovaViewModel : ViewModel() {
                     _messages.value = _messages.value + ChatMessage("nova", "Kuch problem hui, dobara try karo.")
                 }
             } catch (e: Exception) {
-                _messages.value = _messages.value + ChatMessage("nova", "Server se connect nahi ho pa raha.")
+                _messages.value = _messages.value + ChatMessage("nova", "Server se connect nahi ho pa raha: ${e.message}")
             }
             _isLoading.value = false
             _agentStatus.value = AgentStatus("", false)
@@ -125,28 +73,19 @@ class NovaViewModel : ViewModel() {
 
     fun addTask(title: String, description: String = "", priority: String = "medium") {
         viewModelScope.launch {
-            try {
-                api.addTask("Bearer $token", TaskRequest(title, description, priority))
-                loadTasks()
-            } catch (e: Exception) { }
+            try { api.addTask("Bearer $token", TaskRequest(title, description, priority)); loadTasks() } catch (e: Exception) { }
         }
     }
 
     fun completeTask(id: String) {
         viewModelScope.launch {
-            try {
-                api.completeTask("Bearer $token", id)
-                loadTasks()
-            } catch (e: Exception) { }
+            try { api.completeTask("Bearer $token", id); loadTasks() } catch (e: Exception) { }
         }
     }
 
     fun deleteTask(id: String) {
         viewModelScope.launch {
-            try {
-                api.deleteTask("Bearer $token", id)
-                loadTasks()
-            } catch (e: Exception) { }
+            try { api.deleteTask("Bearer $token", id); loadTasks() } catch (e: Exception) { }
         }
     }
 
@@ -159,12 +98,36 @@ class NovaViewModel : ViewModel() {
         }
     }
 
+    fun addNote(title: String, content: String) {
+        viewModelScope.launch {
+            try { api.addNote("Bearer $token", NoteRequest(title, content)); loadNotes() } catch (e: Exception) { }
+        }
+    }
+
+    fun deleteNote(id: String) {
+        viewModelScope.launch {
+            try { api.deleteNote("Bearer $token", id); loadNotes() } catch (e: Exception) { }
+        }
+    }
+
     fun loadExpenses() {
         viewModelScope.launch {
             try {
                 val res = api.getExpenses("Bearer $token")
                 if (res.isSuccessful) _expenses.value = res.body()?.expenses ?: emptyList()
             } catch (e: Exception) { }
+        }
+    }
+
+    fun addExpense(title: String, amount: Double, category: String) {
+        viewModelScope.launch {
+            try { api.addExpense("Bearer $token", ExpenseRequest(title, amount, category)); loadExpenses() } catch (e: Exception) { }
+        }
+    }
+
+    fun deleteExpense(id: String) {
+        viewModelScope.launch {
+            try { api.deleteExpense("Bearer $token", id); loadExpenses() } catch (e: Exception) { }
         }
     }
 
